@@ -1,6 +1,6 @@
 # CameraDemo
 Android Camera Demo.
-Now it has one Activity that shows "How to Use GLSurfaceView to Preview Camera Frame Data"
+Now it has one Activity that shows "How to Use GLSurfaceView for Camera Preview "
 It also shows:
 1. How to Flip the View 
 2. How to Capture the GLsurfaceView Screen 
