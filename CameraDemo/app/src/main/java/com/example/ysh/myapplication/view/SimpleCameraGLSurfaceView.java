@@ -158,13 +158,18 @@ public class SimpleCameraGLSurfaceView extends BaseCameraGLSurfaceView implement
         private short drawOrder[] = {0, 1, 2, 0, 2, 3};
 
         /*Vertex buffers*/
-        private FloatBuffer mVertexBuffer;
-        private FloatBuffer mTexCoordBuffer;
-        private FloatBuffer mTexCoordBufferFlipX;
-        private ShortBuffer mDrawListBuffer;
         private final int mProgram;
+        final int[] bufferVertex = new int[1];
+        final int[] bufferTexCoord = new int[1];
+        final int[] bufferTexCoordFlipX = new int[1];
+        final int[] bufferDrawList = new int[1];
 
         public RenderTool() {
+            FloatBuffer mVertexBuffer;
+            FloatBuffer mTexCoordBuffer;
+            FloatBuffer mTexCoordBufferFlipX;
+            ShortBuffer mDrawListBuffer;
+
             ByteBuffer bb = ByteBuffer.allocateDirect(4 * shapeCoords.length);
             bb.order(ByteOrder.nativeOrder());
             mVertexBuffer = bb.asFloatBuffer();
@@ -192,6 +197,27 @@ public class SimpleCameraGLSurfaceView extends BaseCameraGLSurfaceView implement
             mDrawListBuffer.put(drawOrder);
             mDrawListBuffer.position(0);
 
+
+            GLES20.glGenBuffers(1, bufferVertex, 0);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferVertex[0]);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, mVertexBuffer.capacity()
+                    * 4, mVertexBuffer, GLES20.GL_STATIC_DRAW);
+
+            GLES20.glGenBuffers(1, bufferTexCoord, 0);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferTexCoord[0]);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, mTexCoordBuffer.capacity()
+                    * 4, mTexCoordBuffer, GLES20.GL_STATIC_DRAW);
+
+
+            GLES20.glGenBuffers(1, bufferTexCoordFlipX, 0);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferTexCoordFlipX[0]);
+            GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, mTexCoordBufferFlipX.capacity()
+                    * 4, mTexCoordBufferFlipX, GLES20.GL_STATIC_DRAW);
+
+            GLES20.glGenBuffers(1, bufferDrawList, 0);
+            GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, bufferDrawList[0]);
+            GLES20.glBufferData(GLES20.GL_ELEMENT_ARRAY_BUFFER, mDrawListBuffer.capacity()
+                    * 2, mDrawListBuffer, GLES20.GL_STATIC_DRAW);
 
             //Load Shader source code (in string)
             int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER,
@@ -227,6 +253,10 @@ public class SimpleCameraGLSurfaceView extends BaseCameraGLSurfaceView implement
             int textureHandler = GLES20.glGetUniformLocation(mProgram, "sTexture");
             int textureMatrixLocation = GLES20.glGetUniformLocation(mProgram, "uTextureMatrix");
 
+            GLES20.glUniform1i(textureHandler, 0);
+
+            glUniformMatrix4fv(textureMatrixLocation, 1, false, transformMatrix, 0);
+
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTextureName);
 
@@ -237,28 +267,22 @@ public class SimpleCameraGLSurfaceView extends BaseCameraGLSurfaceView implement
             GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
             GLES20.glEnableVertexAttribArray(positionHandler);
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferVertex[0]);
             GLES20.glVertexAttribPointer(positionHandler, COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT, false, COORDS_PER_VERTEX * 4, mVertexBuffer);
+                    GLES20.GL_FLOAT, false, 0, 0);
 
             GLES20.glEnableVertexAttribArray(texCoordHandler);
             if (flipX){
-                GLES20.glVertexAttribPointer(texCoordHandler, TEXTURE_COORS_PER_VERTEX,
-                        GLES20.GL_FLOAT, false,
-                        TEXTURE_COORS_PER_VERTEX * 4, mTexCoordBufferFlipX);
+                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferTexCoord[0]);
             }else {
-                GLES20.glVertexAttribPointer(texCoordHandler, TEXTURE_COORS_PER_VERTEX,
-                        GLES20.GL_FLOAT, false,
-                        TEXTURE_COORS_PER_VERTEX * 4, mTexCoordBuffer);
+                GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferTexCoordFlipX[0]);
             }
+            GLES20.glVertexAttribPointer(texCoordHandler, TEXTURE_COORS_PER_VERTEX,
+                    GLES20.GL_FLOAT, false,
+                    0, 0);
 
-            GLES20.glUniform1i(textureHandler, 0);
-
-            glUniformMatrix4fv(textureMatrixLocation, 1, false, transformMatrix, 0);
-            GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, mDrawListBuffer);
-
-            GLES20.glDisableVertexAttribArray(positionHandler);
-            GLES20.glDisableVertexAttribArray(texCoordHandler);
-
+            GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, bufferDrawList[0]);
+            GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, 0);
         }
     }
 
