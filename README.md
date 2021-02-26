@@ -6,5 +6,3 @@ It also shows:
 2. How to Capture Screenshot of GLSurfaceView to bitmap
 
 This demo is simple, some encapsulation is needed if you want to use code in this demo to build your own production app. for example, 'cameraViewContainer' in the 'CameraGLSurfaceActivity' now is just FrameLayout, you should make it a custom view like real 'CameraViewContainer' and remove methods like 'resizeSurfaceView' there.
-
-An article in Chinese will be written in the future to illustrate more about this Demo, stay tuned!
